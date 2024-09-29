@@ -207,7 +207,7 @@ class HexPlaneGenerator(torch.nn.Module):
             # rendering_stitch.append(rendering_stitch_single)
             rendering_stitch.append(dummy)
         rendering_stitch = torch.cat(rendering_stitch, 0)
-        rendering_stitch = self.neural_blending.synthesis(rendering_stitch, eg3d_ws, update_emas=update_emas,
+        rendering_stitch = self.neural_blending.synthesis(rendering_stitch, eg3d_ws, update_emas=update_emas, **synthesis_kwargs)
 
         rendering_stitch2 = []
         for stitch, rendering_back in zip(rendering_stitch, rendering_image_back):
