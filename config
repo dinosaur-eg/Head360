@@ -1,0 +1,1 @@
+python train_next3d.py --outdir=training-runs --cfg=ffhq --data=../data/next3d/images/fs_002_52 --rdata ../data/next3d/PLY_lod3 --gpus=4 --batch=16 --gamma=4 --topology_path=data/mh/template_lod3.obj --gen_pose_cond=True --gen_exp_cond=False --disc_c_noise=1 --load_lms=True --model_version=next3d
