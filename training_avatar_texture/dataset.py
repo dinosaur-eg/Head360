@@ -115,8 +115,8 @@ class Dataset(torch.utils.data.Dataset):
         return self._raw_idx.size
 
     def __getitem__(self, idx):
-        # mesh_id = (idx % 3744) // 72 + 52 * (idx // 3744)
-        mesh_id = 0
+        mesh_id = (idx % 3744) // 72 + 52 * (idx // 3744)
+        # mesh_id = 0
         # mesh_id = idx
         image = self._load_raw_image(self._raw_idx[idx], resolution=self.resolution)
         if self.load_obj:
@@ -139,7 +139,7 @@ class Dataset(torch.utils.data.Dataset):
         id = idx // (72 * 52)
         # id = 0
         # id = idx // 8
-        return id + 80
+        return id
 
     def get_label(self, idx):
         label = self._get_raw_labels()[self._raw_idx[idx]]
@@ -160,10 +160,7 @@ class Dataset(torch.utils.data.Dataset):
         return image.copy()
 
     def get_vert(self, idx):
-        # mesh_id = (idx % 3744) // 72 + 52 * (idx // 3744)
-        mesh_id = 0
-        # mesh_id = idx // 14
-        # mesh_id = idx
+        mesh_id = (idx % 3744) // 72 + 52 * (idx // 3744)
         if self.mesh_type == '.obj':
             verts = self._load_raw_verts_obj(self._mesh_raw_idx[mesh_id])
         elif self.mesh_type == '.ply':
@@ -270,7 +267,7 @@ class ImageFolderDataset(Dataset):
             raise IOError('Path must point to a directory or zip')
 
         PIL.Image.init()
-        self._image_fnames = sorted(fname for fname in self._all_fnames if self._file_ext(fname) in PIL.Image.EXTENSION)[:72]
+        self._image_fnames = sorted(fname for fname in self._all_fnames if self._file_ext(fname) in PIL.Image.EXTENSION)
         # self._mesh_fnames = [fname.replace('png', 'obj') for fname in self._image_fnames]
         self._mesh_fnames = sorted(fname for fname in self._all_mesh_fnames)
         if len(self._image_fnames) == 0:
@@ -333,8 +330,8 @@ class ImageFolderDataset(Dataset):
 
     def _load_raw_labels(self):
         ### debug: load exp labels and camera labels
-        fname = 'dataset_mead_scale9_focal2.json'
-        fname_exp = 'dataset_exp.json'
+        fname = 'dataset_pose.json'
+        fname_exp = 'total_dataset_exp.json'
         if fname not in self._all_fnames:
             return None
         with self._open_file(fname) as f:
@@ -371,19 +368,6 @@ class ImageFolderDataset(Dataset):
             data_np[:, i] = data_pd[name]
         # t = []
         v = data_np[:,:3].astype(np.float32)
-        # # v = v *1000. + np.array([[0., 0., 1000.]], dtype=np.float32)
-        # verts = verts.reshape((-1, 3))
-        # # rotate and scale
-        # scale, rot = 2.6, 0.
-        # rotate_matrix = np.array([[ math.cos(rot),  0,  math.sin(rot)],
-        #                      [ 0,              1,              0],
-        #                      [-math.sin(rot),  0,  math.cos(rot)]])
-        #
-        # rotate_matrix = np.array([[ 1,  0,  0],
-        #                      [ 0,  math.cos(rot), -math.sin(rot)],
-        #                      [ 0,  math.sin(rot),  math.cos(rot)]])
-        #
-        # v = np.matmul(v*scale, rotate_matrix.T)
         return v
 
     def _load_raw_verts_obj(self, raw_idx):
@@ -406,8 +390,6 @@ class ImageFolderDataset(Dataset):
     def _load_raw_lms(self, raw_idx):
         fname = self._mesh_fnames[int(raw_idx)]
         lms = np.loadtxt(os.path.join(self._mesh_path, fname).replace('meshes', 'lms').replace('obj', 'txt'))
-        # lms = np.loadtxt(os.path.join(self._mesh_path, fname).replace('obj', 'txt'))
-        # lms = np.loadtxt(os.path.join(self._mesh_path, fname).replace('meshes', 'lms').replace('obj', 'txt'))
         return lms.astype(np.float32)    
 
 class VideoFramesFolderDataset(Dataset):

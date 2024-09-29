@@ -40,8 +40,8 @@ def setup_snapshot_image_grid(training_set, random_seed=0, bias=30):
     rnd = np.random.RandomState(random_seed)
     # gw = np.clip(7680 // training_set.image_shape[2], 7, 32)
     # gh = np.clip(4320 // training_set.image_shape[1], 4, 32)
-    gw = 1
-    gh = 1
+    gw = 10
+    gh = 5
 
     # No labels => show random subset of training samples.
     if not training_set.has_labels:
@@ -50,32 +50,8 @@ def setup_snapshot_image_grid(training_set, random_seed=0, bias=30):
         grid_indices = [all_indices[i % len(all_indices)] for i in range(gw * gh)]
 
     else:
-        # Group training samples by label.
-        # label_groups = dict() # label => [idx, ...]
-        # for idx in range(len(training_set)):
-        #     label = tuple(training_set.get_details(idx).raw_label.flat[::-1])
-        #     if label not in label_groups:
-        #         label_groups[label] = []
-        #     label_groups[label].append(idx)
-        #
-        # # Reorder.
-        # label_order = list(label_groups.keys())
-        # rnd.shuffle(label_order)
-        # for label in label_order:
-        #     rnd.shuffle(label_groups[label])
-
-        # Organize into grid.
-        # grid_indices = [(i * (53 * 72) + bias) for i in range(2)]#multi people
-        # grid_indices = [i * 3744 + 3702 for i in range(50)]
-        # grid_indices = [(i * 14 + bias) for i in range(52)]# single person 14 frames
-        # grid_indices = [(i * 72) + bias for i in range(50)]#single people 72 frames
-        grid_indices = [bias]
-        # for y in range(gh):
-        #     # label = label_order[y % len(label_order)]
-        #     label = label_order[30]#front face
-        #     indices = label_groups[label]
-        #     grid_indices += [indices[x % len(indices)] for x in range(gw)]
-        #     label_groups[label] = [indices[(i + gw) % len(indices)] for i in range(len(indices))]
+        
+        grid_indices = [i * 3744 + 3702 for i in range(50)]
 
     # Load data.
     images, labels, verts, ids = zip(*[training_set[i] for i in grid_indices])
@@ -360,7 +336,7 @@ def training_loop(
     while True:
         t_start = time.time()
         # Fetch training data.
-        '''
+        # '''
         with torch.autograd.profiler.record_function('data_fetch'):
             phase_real_img, phase_real_c, phase_real_v, phase_real_id = next(training_set_iterator)
             phase_real_img = (phase_real_img.to(device).to(torch.float32) / 127.5 - 1).split(batch_gpu)
@@ -494,7 +470,7 @@ def training_loop(
             if rank == 0:
                 print()
                 print('Aborting...')
-        '''
+        # '''
         # Save image snapshot.
         if (rank == 0) and (image_snapshot_ticks is not None) and (cur_tick % image_snapshot_ticks == 0):
             '''for training'''
@@ -508,44 +484,6 @@ def training_loop(
                             grid_size=grid_size)
             save_image_grid(images_depth, os.path.join(run_dir, f'fakes{cur_nimg // 1000:06d}_depth.png'),
                             drange=[images_depth.min(), images_depth.max()], grid_size=grid_size)
-            # # '''for test'''
-            # for i in range(72):
-            #     grid_z = grid_zs[i]
-            #     grid_c = grid_cs[i]
-            #     grid_v = grid_vs[i]
-            #     out = [G_ema(z=z, c=c, v=v, noise_mode='const') for z, c, v in zip(grid_z, grid_c, grid_v)]
-            #     images = torch.cat([o['image'].cpu() for o in out]).numpy()
-            #     images_raw = torch.cat([o['image_raw'].cpu() for o in out]).numpy()
-            #     images_depth = -torch.cat([o['image_depth'].cpu() for o in out]).numpy()
-            #     save_image_grid(images, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_' + str(i) + '.png'), drange=[-1,1], grid_size=grid_size)
-                # save_image_grid(images_raw, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_raw_' + str(i) + '.png'), drange=[-1,1], grid_size=grid_size)
-                # save_image_grid(images_depth, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_depth_' + str(i) + '.png'), drange=[images_depth.min(), images_depth.max()], grid_size=grid_size)
-
-
-            #--------------------
-            # # Log forward-conditioned images
-
-            # forward_cam2world_pose = LookAtPoseSampler.sample(3.14/2, 3.14/2, torch.tensor([0, 0, 0.2], device=device), radius=2.7, device=device)
-            # intrinsics = torch.tensor([[4.2647, 0, 0.5], [0, 4.2647, 0.5], [0, 0, 1]], device=device)
-            # forward_label = torch.cat([forward_cam2world_pose.reshape(-1, 16), intrinsics.reshape(-1, 9)], 1)
-
-            # grid_ws = [G_ema.mapping(z, forward_label.expand(z.shape[0], -1)) for z, c in zip(grid_z, grid_c)]
-            # out = [G_ema.synthesis(ws, c=c, noise_mode='const') for ws, c in zip(grid_ws, grid_c)]
-
-            # images = torch.cat([o['image'].cpu() for o in out]).numpy()
-            # images_raw = torch.cat([o['image_raw'].cpu() for o in out]).numpy()
-            # images_depth = -torch.cat([o['image_depth'].cpu() for o in out]).numpy()
-            # save_image_grid(images, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_f.png'), drange=[-1,1], grid_size=grid_size)
-            # save_image_grid(images_raw, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_raw_f.png'), drange=[-1,1], grid_size=grid_size)
-            # save_image_grid(images_depth, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_depth_f.png'), drange=[images_depth.min(), images_depth.max()], grid_size=grid_size)
-
-            #--------------------
-            # # Log Cross sections
-
-            # grid_ws = [G_ema.mapping(z, c.expand(z.shape[0], -1)) for z, c in zip(grid_z, grid_c)]
-            # out = [sample_cross_section(G_ema, ws, w=G.rendering_kwargs['box_warp']) for ws, c in zip(grid_ws, grid_c)]
-            # crossections = torch.cat([o.cpu() for o in out]).numpy()
-            # save_image_grid(crossections, os.path.join(run_dir, f'fakes{cur_nimg//1000:06d}_crossection.png'), drange=[-50,100], grid_size=grid_size)
 
         # Save network snapshot.
         snapshot_pkl = None
