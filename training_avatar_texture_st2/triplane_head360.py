@@ -228,11 +228,7 @@ class HexPlaneGenerator(torch.nn.Module):
         alpha_images = torch.cat(alpha_images, 1).unsqueeze(2)
         rendering_stitch = torch.cat((rendering_stitch2, rendering_images[1], rendering_images[2]), 1)
         rendering_stitch = rendering_stitch.view(*static_plane.shape)
-        # for i in range(rendering_stitch.shape[0]):
-        #     if hair[i] == 1:
-        #         blended_planes = rendering_stitch * alpha_image + static_plane * (1 - alpha_image)
-        #     else:
-        #         blended_planes = rendering_stitch
+
         '''hair detach'''
         blended_planes = []
         for hair, stitch, static, alpha_image in zip(hairs, rendering_stitch, static_plane, alpha_images):
