@@ -294,9 +294,9 @@ class HexPlaneGenerator(torch.nn.Module):
             [0, 0, 0],
             [0, 90, 0],
             [0, -90, 0],
-            [90, 0, 0],  # 头顶
-            [0, 180, 0],  # 背后
-            [-90, 0, 0]  # 脖子
+            [90, 0, 0],  # top
+            [0, 180, 0],  # back
+            [-90, 0, 0]  # bottom
         ]
         # textures = torch.ones_like(textures) * 100
         rendering_images, alpha_images, uvcoords_images, lm2ds = self.rasterize(v, lms, textures, rendering_views,
